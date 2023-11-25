@@ -1,5 +1,9 @@
+import getpass
+import os
+
+import caldav
 import ics
-from . import cli, review
+from . import caldav, cli, review
 
 example_dict = {
     "card": "die Karte",
@@ -9,15 +13,27 @@ example_dict = {
 
 
 def make_examples():
-    todos = [
+    return {
         ics.Todo(name=front, description=back)
         for front, back in example_dict.items()
-    ]
-    return ics.Calendar(todos=todos)
+    }
 
 
 if __name__ == "__main__":
-    cal = make_examples()
+    url = os.environ.get("TODOLEARN_CALDAV_URL")
+    if url is not None:
+        username = os.environ["TODOLEARN_CALDAV_USERNAME"]
+        calendar_url = os.environ["TODOLEARN_CALDAV_CALENDAR_URL"]
+        password = getpass.getpass("Password: ")
+        cal = caldav.load_from_caldav(
+            dav_url=url,
+            username=username,
+            password=password,
+            calendar_url=calendar_url,
+        )
+    else:
+        example_todos = make_examples()
+        cal = ics.Calendar(todos=example_todos)
     deck = review.CardDeck(cal)
     cli.interactive_review(deck)
     out = cal.serialize()
