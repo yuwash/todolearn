@@ -186,7 +186,9 @@ class CardDeck:
         return mode_todo
 
     def select_unlearned_cards(
-        self, max_count: int,
+        self,
+        mode_names: typing.Container[str],
+        max_count: typing.Optional[int] = None,
     ) -> collections.abc.Collection[ics.Todo]:
         root_cards = []  # Sorted by priority.
         referenced_card_uids = set()
@@ -200,15 +202,16 @@ class CardDeck:
                     (-(card.priority or 0), card),
                     # Adding the negative priority for sorting.
                 )
-            else:
+            elif card.name in mode_names:
                 referenced_card_uids.add(referenced_card_uid)
-        return list(itertools.islice(
-            (
-                card for __, card in root_cards
-                if card.uid not in referenced_card_uids
-            ),
-            max_count,
-        ))
+            # Ignoring mode cards of other (potentially unknown) modes.
+        cards = (
+            card for __, card in root_cards
+            if card.uid not in referenced_card_uids
+        )
+        if max_count is None:
+            return cards
+        return itertools.islice(cards, max_count)
 
     def get_next_due_card(
         self,
@@ -244,7 +247,9 @@ class CardDeck:
             if card is None:
                 # Try adding new cards before reviewing cards that
                 # aren’t due yet.
-                next_batch = self.select_unlearned_cards(max_count=10)
+                next_batch = self.select_unlearned_cards(
+                    mode_names=mode_names, max_count=10
+                )
                 for root_todo in next_batch:
                     for mode_name in mode_names:
                         self.add_mode_to_card(
