@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "todolearn"
-version = "0.2.0"
+version = "0.3.0"
 description = "Using iCalendar VTODO via ics for learning (flashcards)"
 authors = ["Yushin Washio <yuwash@yandex.com>"]
 license = "Mozilla Public License Version 2.0"
